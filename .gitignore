@@ -1,0 +1,18 @@
+# Virtual Environment
+aci-env/
+venv/
+.venv/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Secrets and Credentials
+credentials.py
+.env
+.secrets
+
+# IDE files
+.vscode/
+.idea/
