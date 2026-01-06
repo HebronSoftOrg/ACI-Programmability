@@ -47,6 +47,8 @@ This model governs how contracts are applied.
 
 This relationship is directional: the consumer initiates traffic to the provider.
 
+
+'''text
 +--------------------------------------------------+
 |             Application Profile: "OnlineStore"   |
 |                                                  |
