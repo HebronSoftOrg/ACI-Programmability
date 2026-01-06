@@ -1,4 +1,4 @@
-## 3. Policy Objects In-Depth
+##  Policy Objects In-Depth
 
 Policy objects define the security posture and communication rules for endpoints. They are the heart of ACI's "application-centric" design.
 
@@ -47,22 +47,27 @@ This model governs how contracts are applied.
 
 This relationship is directional: the consumer initiates traffic to the provider.
 
+### Visualizing the Provider/Consumer Model
 
-'''text
-+--------------------------------------------------+
-|             Application Profile: "OnlineStore"   |
-|                                                  |
-|  +-----------+      +-----------+      +-----------+
-|  |  EPG:     |      |  EPG:     |      |  EPG:     |
-|  |  "Users"  |      |  "Web"    |      |  "App"    | ...
-|  +-----------+      +-----------+      +-----------+
-|       |                  |                  |
-|       +----(Consumes)----+----(Provides)----+
-|                          |
-|                  +----------------+
-|                  | Contract:      |
-|                  | "Web-Access"   |
-|                  | (TCP 443)      |
-|                  +----------------+
-|
-+--------------------------------------------------+
+A common use case is a 3-tier web application. The relationship between the EPGs and the Contracts would look like this:
+
+```text
++-----------------------------------------------------------------+
+|                 Application Profile: "OnlineStore"              |
+|                                                                 |
+|  +-----------+         +-----------+         +-----------+      |
+|  |   EPG:    |         |   EPG:    |         |   EPG:    |      |
+|  |  "Users"  |         |   "Web"   |         |   "App"   |      |
+|  +-----------+         +-----------+         +-----------+      |
+|       |                     |                     |             |
+|       | consumes            | provides            | consumes    |
+|       +---------------------+                     +-------------+
+|                             |                     |             |
+|                   +-------------------+   +-------------------+ |
+|                   | Contract:         |   | Contract:         | |
+|                   | "Web-Access"      |   | "App-Access"      | |
+|                   | (Filter: TCP 443) |   | (Filter: TCP 8080)| |
+|                   +-------------------+   +-------------------+ |
+|                                                                 |
++-----------------------------------------------------------------+
+
