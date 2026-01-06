@@ -26,7 +26,7 @@ The ACI Management Information Tree (MIT) organizes all logical components withi
 
 This tree shows how the L2/L3 forwarding domains are structured. A `VRF` is a container for `Bridge Domains`, which in turn are containers for `Subnets`.
 
-
+```text
 Tenant
 └─── VRF (Context)
      │
