@@ -1,10 +1,12 @@
-# Chapter 9: ACI Tenant Networking Components
+# ACI Tenant Networking Components
 
-This document summarizes the core networking and policy objects within a Cisco ACI Tenant, translating traditional concepts to the ACI model.
+This document summarizes the core networking and policy objects within a Cisco ACI Tenant, translating traditional concepts to the ACI model and illustrating their hierarchy.
 
 ---
 
 ## Translation: Traditional vs. ACI Concepts
+
+This table maps familiar networking concepts to their ACI equivalents.
 
 | Traditional Concept | ACI Equivalent | Purpose |
 | :--- | :--- | :--- |
@@ -18,28 +20,46 @@ This document summarizes the core networking and policy objects within a Cisco A
 
 ## ACI Object Hierarchy
 
-The ACI Management Information Tree (MIT) organizes all logical and physical components. The primary logical objects within a `Tenant` are structured as follows:
+The ACI Management Information Tree (MIT) organizes all logical components within a `Tenant`.
 
 ### 1. Networking Objects (The "Where")
 
-These objects define the L2/L3 forwarding domains.
+This tree shows how the L2/L3 forwarding domains are structured. A `VRF` is a container for `Bridge Domains`, which in turn are containers for `Subnets`.
 
-*   **`Tenant`**
-    *   **`VRF`** (Context)
-        *   **`Bridge Domain` (BD)**
-            *   **`Subnet`** (e.g., 192.168.1.1/24)
-            *   **`Subnet`** (e.g., 192.168.2.1/24)
+```text
+Tenant
+└─── VRF (Context)
+     │
+     └─── Bridge Domain (BD)
+          │   │
+          │   ├─── Subnet 1 (Gateway IP)
+          │   └─── Subnet 2 (Gateway IP)
+          │
+          └─── Bridge Domain (BD)
+              │
+              └─── Subnet 3 (Gateway IP)
 
 ### 2. Policy Objects (The "Who" and "How")
 
+This tree shows the policy structure. Application Profiles are containers for End-Point Groups (EPGs). Contracts exist in parallel to define the communication rules between EPGs.
 These objects define security and communication rules.
 
-*   **`Tenant`**
-    *   **`Application Profile` (AP)**
-        *   **`End-Point Group` (EPG)**
-    *   **`Contract`**
-        *   **`Subject`**
-            *   **`Filter`** (e.g., TCP port 443)
+Tenant
+├─── Application Profile (AP)
+│    │
+│    └─── End-Point Group (EPG)
+│         │
+│         └─── Endpoint (e.g., a VM or server)
+│
+├─── Contracts
+│    │
+│    └─── Contract
+│         │
+│         └─── Subject
+│              │
+│              └─── Filter (e.g., TCP Port 443)
+│
+└─── Networking Objects (VRF, BD, etc. from above)
 
 ---
 
