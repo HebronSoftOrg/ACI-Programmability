@@ -1,23 +1,43 @@
 import credentials
-from acitoolkit import acitoolkit as aci
+import requests
+import json
 
-session = aci.Session(credentials.URL, credentials.USER, credentials.PASSWORD)
-session.login()
+# 1. Login to get a token (since toolkit methods are failing)
+login_url = f"{credentials.URL}/api/aaaLogin.json"
+login_payload = {
+    "aaaUser": {
+        "attributes": {
+            "name": credentials.USER,
+            "pwd": credentials.PASSWORD
+        }
+    }
+}
 
-# 1. Access the existing hierarchy
-tenant = aci.Tenant('Lab-Tenant-Ahmad')
-app    = aci.AppProfile('Web-App', tenant)
-epg    = aci.EPG('Web-Servers', app)
+requests.packages.urllib3.disable_warnings()
+s = requests.Session()
+login_resp = s.post(login_url, json=login_payload, verify=False)
+token = login_resp.json()['imdata'][0]['aaaLogin']['attributes']['token']
 
-# 2. Define the Physical Interface
-intf = aci.Interface('eth', '1', '101', '1', '10')
+# 2. Define the exact path for the Static Port
+# This targets Lab-Tenant-Ahmad -> Web-App -> Web-Servers
+dist_path_url = f"{credentials.URL}/api/node/mo/uni/tn-Lab-Tenant-Ahmad/ap-Web-App/epg-Web-Servers.json"
 
-# 3. Create the Static Binding properly
-# In acitoolkit, you create an L2Interface, attach the physical interface,
-# and then add that L2Interface as a child of the EPG.
-vlan_id = '100'
-static_binding = aci.L2Interface('vlan' + vlan_id, 'vlan', vlan_id)
-static_binding.attach(intf)
+# 3. The Raw JSON payload for the Static Path
+# This binds Leaf 101, Port 1/10 with VLAN 100
+payload = {
+    "fvRsPathAtt": {
+        "attributes": {
+            "dn": "uni/tn-Lab-Tenant-Ahmad/ap-Web-App/epg-Web-Servers/rspathAtt-[topology/pod-1/paths-101/pathep-[eth1/10]]",
+            "encap": "vlan-100",
+            "status": "created,modified"
+        }
+    }
+}
 
-# The correct method for an EPG to hold a static path is .add_child()
-epg.add_child(static_binding)
+# 4. Push to APIC
+resp = s.post(dist_path_url, json=payload, cookies={"APIC-Cookie": token}, verify=False)
+
+if resp.ok:
+    print("✅ SUCCESS: Static Port 1/10 bound to EPG Web-Servers (Raw JSON Push)")
+else:
+    print(f"❌ Error: {resp.text}")
