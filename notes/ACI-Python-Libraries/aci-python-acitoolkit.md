@@ -46,3 +46,26 @@ The following script demonstrates the power and simplicity of the `acitoolkit`. 
 
 The `acitoolkit` demonstrates the power of a good SDK. It allows the developer to think in terms of ACI objects (`Endpoint`, `EPG`) and their relationships (`.get_parent()`) rather than the low-level mechanics of HTTP requests, JSON parsing, and cookie management.
 
+
+### Example: Creating Objects with `acitoolkit`
+
+The `acitoolkit` simplifies not only reading data but also creating new configurations on the APIC. The workflow follows a "define, then push" model.
+
+#### Script Workflow Explained
+
+**1. Authentication**
+*   First, a `Session` object is created and a `.login()` is performed to authenticate with the APIC and obtain a session cookie. Best practice is to store credentials in a separate `credentials.py` file and import them.
+
+**2. Define Desired State (In-Memory)**
+*   The script creates instances of toolkit classes like `aci.Tenant`, `aci.Context` (VRF), and `aci.BridgeDomain`.
+*   **Crucially, no API calls are made at this stage.** These are just Python objects in local memory.
+*   Parent-child relationships are defined by passing the parent object during creation (e.g., `aci.Context('Lab-VRF', tenant)`).
+*   Relational links are made using helper methods (e.g., `bd.add_context(vrf)` links a Bridge Domain to a VRF).
+
+**3. Push to APIC**
+*   The top-level object (in this case, `tenant`) is used to generate the full configuration.
+*   The `.get_json()` method serializes the entire object hierarchy (tenant and all its children) into a single JSON payload.
+*   The `session.push_to_apic(url, json_payload)` method sends the configuration to the APIC in a single `HTTP POST` request.
+*   The script then checks the response's status code to confirm if the configuration was accepted.
+
+This approach demonstrates the power of Infrastructure as Code (IaC): the Python script becomes the single source of truth for the desired network configuration.
