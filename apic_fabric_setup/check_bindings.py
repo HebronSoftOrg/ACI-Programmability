@@ -1,17 +1,30 @@
 import credentials
-from acitoolkit import acitoolkit as aci
+import requests
 
-session = aci.Session(credentials.URL, credentials.USER, credentials.PASSWORD)
-session.login()
+# 1. Login to get token
+login_url = f"{credentials.URL}/api/aaaLogin.json"
+login_payload = {"aaaUser": {"attributes": {"name": credentials.USER, "pwd": credentials.PASSWORD}}}
+requests.packages.urllib3.disable_warnings()
+s = requests.Session()
+login_resp = s.post(login_url, json=login_payload, verify=False)
+token = login_resp.json()['imdata'][0]['aaaLogin']['attributes']['token']
 
-# Get the EPG from the APIC
-tenant = aci.Tenant('Lab-Tenant-Ahmad')
-app = aci.AppProfile('Web-App', tenant)
-epg = aci.EPG('Web-Servers', app)
+# 2. Query for Static Path Bindings in your specific EPG
+# We use a query filter to look for 'fvRsPathAtt' objects
+url = f"{credentials.URL}/api/node/mo/uni/tn-Lab-Tenant-Ahmad/ap-Web-App/epg-Web-Servers.json?query-target=children&target-subtree-class=fvRsPathAtt"
 
-# Fetch all children of the EPG to find the L2Interface (Static Path)
-children = aci.EPG.get_children(epg) # This might vary by toolkit version
-# Alternative: epg.get(session) 
+resp = s.get(url, cookies={"APIC-Cookie": token}, verify=False)
+data = resp.json()['imdata']
 
-print(f"Checking bindings for {epg.name}...")
-# In a real scenario, you can iterate through children to find L2Interface objects
+print(f"Inspecting EPG: Web-Servers (via Raw API)")
+print("-" * 40)
+
+if not data:
+    print("❌ No static bindings found in the APIC database.")
+else:
+    for item in data:
+        attributes = item['fvRsPathAtt']['attributes']
+        path = attributes['tDn']
+        vlan = attributes['encap']
+        print(f"✅ Found Binding: {path}")
+        print(f"   Encap: {vlan}")
